@@ -1,9 +1,11 @@
+// Package validor provides tools for testing Terraform modules
 package validor
 
 import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -17,10 +19,10 @@ var (
 func init() {
 	flag.BoolVar(&skipDestroy, "skip-destroy", false, "Skip running terraform destroy after apply")
 	flag.StringVar(&exception, "exception", "", "Comma-separated list of examples to exclude")
-	flag.StringVar(&example, "example", "", "Specific example to test")
+	flag.StringVar(&example, "example", "", "Specific example(s) to test (comma-separated)")
 }
 
-// TestApplyNoError tests a single Terraform module
+// TestApplyNoError tests one or more specific Terraform modules
 func TestApplyNoError(t *testing.T) {
 	flag.Parse()
 	parseExceptionList()
@@ -29,27 +31,42 @@ func TestApplyNoError(t *testing.T) {
 		t.Fatal(redError("-example flag is not set"))
 	}
 
-	if exceptionList[example] {
-		t.Skipf("Skipping example %s as it is in the exception list", example)
-	}
+	// Parse the example flag as a comma-separated list
+	exampleList := strings.Split(example, ",")
 
-	modulePath := filepath.Join("..", "examples", example)
-	module := NewModule(example, modulePath)
-
-	if err := module.Apply(t); err != nil {
-		t.Fail()
-	} else {
-		t.Logf("✓ Module %s applied successfully", module.Name)
-	}
-
-	if !skipDestroy {
-		if err := module.Destroy(t); err != nil && !module.ApplyFailed {
-			t.Logf("Cleanup failed for module %s: %v", module.Name, err)
+	// Test each specified example
+	for _, ex := range exampleList {
+		ex = strings.TrimSpace(ex)
+		if ex == "" {
+			continue
 		}
-	}
 
-	// Print a summary for single module test
-	PrintModuleSummary(t, []*Module{module})
+		if exceptionList[ex] {
+			t.Logf("Skipping example %s as it is in the exception list", ex)
+			continue
+		}
+
+		// Run the example as a subtest to get better reporting
+		t.Run(ex, func(t *testing.T) {
+			modulePath := filepath.Join("..", "examples", ex)
+			module := NewModule(ex, modulePath)
+
+			if err := module.Apply(t); err != nil {
+				t.Fail()
+			} else {
+				t.Logf("✓ Module %s applied successfully", module.Name)
+			}
+
+			if !skipDestroy {
+				if err := module.Destroy(t); err != nil && !module.ApplyFailed {
+					t.Logf("Cleanup failed for module %s: %v", module.Name, err)
+				}
+			}
+
+			// Print a summary for this module
+			PrintModuleSummary(t, []*Module{module})
+		})
+	}
 }
 
 // TestApplyAllParallel tests all Terraform modules in parallel
