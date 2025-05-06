@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/dkooll/validor/compare/v1.1.0...v1.2.0) (2025-05-06)
+
+
+### Features
+
+* add parallel support ([#6](https://github.com/dkooll/validor/issues/6)) ([9380852](https://github.com/dkooll/validor/commit/938085235a32b0322878c21c8ea030cb31f131eb))
+
 ## [1.1.0](https://github.com/dkooll/validor/compare/v1.0.0...v1.1.0) (2025-05-06)
 
 
