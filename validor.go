@@ -48,6 +48,7 @@ func TestApplyNoError(t *testing.T) {
 
 		// Run the example as a subtest to get better reporting
 		t.Run(ex, func(t *testing.T) {
+			t.Parallel()
 			modulePath := filepath.Join("..", "examples", ex)
 			module := NewModule(ex, modulePath)
 
