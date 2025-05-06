@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/dkooll/validor/compare/v1.0.0...v1.1.0) (2025-05-06)
+
+
+### Features
+
+* add the ability to run more then one usage using the example parameter ([#5](https://github.com/dkooll/validor/issues/5)) ([0220c8c](https://github.com/dkooll/validor/commit/0220c8c50b78b0b590ffc5dc013ed6c60bdc3377))
+* update documentation ([#3](https://github.com/dkooll/validor/issues/3)) ([7b3b692](https://github.com/dkooll/validor/commit/7b3b6929026c4dccd1d082b1cf434a7b3f6d1c51))
+
 ## 1.0.0 (2025-05-04)
 
 
