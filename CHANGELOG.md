@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/dkooll/validor/compare/v1.2.0...v1.3.0) (2025-05-06)
+
+
+### Features
+
+* fix count in summary ([#10](https://github.com/dkooll/validor/issues/10)) ([fe2f4e4](https://github.com/dkooll/validor/commit/fe2f4e4019b37dfdf7a609b166c0f3d07cb3e1a1))
+
 ## [1.2.0](https://github.com/dkooll/validor/compare/v1.1.0...v1.2.0) (2025-05-06)
 
 
