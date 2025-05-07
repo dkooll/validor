@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/dkooll/validor/compare/v1.3.0...v1.4.0) (2025-05-07)
+
+
+### Features
+
+* cleanup comments ([#12](https://github.com/dkooll/validor/issues/12)) ([dcab198](https://github.com/dkooll/validor/commit/dcab19883c7aefac342574d7eef099b47ca03582))
+
 ## [1.3.0](https://github.com/dkooll/validor/compare/v1.2.0...v1.3.0) (2025-05-06)
 
 
