@@ -82,54 +82,6 @@ func TestApplyNoError(t *testing.T) {
 	})
 }
 
-// TestApplyNoError tests one or more specific Terraform modules
-// func TestApplyNoError(t *testing.T) {
-// 	flag.Parse()
-// 	parseExceptionList()
-//
-// 	if example == "" {
-// 		t.Fatal(redError("-example flag is not set"))
-// 	}
-//
-// 	// Parse the example flag as a comma-separated list
-// 	exampleList := strings.Split(example, ",")
-//
-// 	// Test each specified example
-// 	for _, ex := range exampleList {
-// 		ex = strings.TrimSpace(ex)
-// 		if ex == "" {
-// 			continue
-// 		}
-//
-// 		if exceptionList[ex] {
-// 			t.Logf("Skipping example %s as it is in the exception list", ex)
-// 			continue
-// 		}
-//
-// 		// Run the example as a subtest to get better reporting
-// 		t.Run(ex, func(t *testing.T) {
-// 			t.Parallel()
-// 			modulePath := filepath.Join("..", "examples", ex)
-// 			module := NewModule(ex, modulePath)
-//
-// 			if err := module.Apply(t); err != nil {
-// 				t.Fail()
-// 			} else {
-// 				t.Logf("✓ Module %s applied successfully", module.Name)
-// 			}
-//
-// 			if !skipDestroy {
-// 				if err := module.Destroy(t); err != nil && !module.ApplyFailed {
-// 					t.Logf("Cleanup failed for module %s: %v", module.Name, err)
-// 				}
-// 			}
-//
-// 			// Print a summary for this module
-// 			PrintModuleSummary(t, []*Module{module})
-// 		})
-// 	}
-// }
-
 // TestApplyAllParallel tests all Terraform modules in parallel
 func TestApplyAllParallel(t *testing.T) {
 	flag.Parse()
