@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/dkooll/validor/compare/v1.4.0...v1.5.0) (2025-06-09)
+
+
+### Features
+
+* **deps:** bump github.com/gruntwork-io/terratest from 0.48.2 to 0.49.0 ([#14](https://github.com/dkooll/validor/issues/14)) ([ee1fc3d](https://github.com/dkooll/validor/commit/ee1fc3d7a6c8b22d5a1fae36f10a676fd856330d))
+
 ## [1.4.0](https://github.com/dkooll/validor/compare/v1.3.0...v1.4.0) (2025-05-07)
 
 
