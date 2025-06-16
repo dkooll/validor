@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/fatih/color v1.18.0
-	github.com/gruntwork-io/terratest v0.49.0
+	github.com/gruntwork-io/terratest v0.50.0
 )
 
 require (
