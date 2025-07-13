@@ -23,7 +23,7 @@ func init() {
 	flag.StringVar(&example, "example", "", "Specific example(s) to test (comma-separated)")
 }
 
-// TestApplyNoError tests one or more specific Terraform modules
+// TestApplyNoError tests specific Terraform modules listed in the -example flag
 func TestApplyNoError(t *testing.T) {
 	flag.Parse()
 	parseExceptionList()
@@ -82,7 +82,7 @@ func TestApplyNoError(t *testing.T) {
 	})
 }
 
-// TestApplyAllParallel tests all Terraform modules in parallel
+// TestApplyAllParallel discovers and tests all Terraform modules in parallel
 func TestApplyAllParallel(t *testing.T) {
 	flag.Parse()
 	parseExceptionList()

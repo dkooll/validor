@@ -8,7 +8,7 @@ import (
 
 var redError = color.New(color.FgHiRed, color.Bold).SprintFunc()
 
-// parseExceptionList converts a comma-separated list to a map
+// parseExceptionList converts comma-separated exception string to a map
 func parseExceptionList() {
 	exceptionList = make(map[string]bool)
 	if exception != "" {
@@ -19,7 +19,7 @@ func parseExceptionList() {
 	}
 }
 
-// BoolToStr converts a boolean to a string representation
+// BoolToStr returns yes if condition is true, otherwise returns no
 func BoolToStr(cond bool, yes, no string) string {
 	if cond {
 		return yes

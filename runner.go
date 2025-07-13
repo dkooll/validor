@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// RunTests executes tests for multiple modules
+// RunTests executes Terraform module tests sequentially or in parallel
 func RunTests(t *testing.T, modules []*Module, parallel bool) {
 	// Use a mutex to protect access to the global error collector
 	var mutex sync.Mutex

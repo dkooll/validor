@@ -9,7 +9,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 )
 
-// Module represents a Terraform module to test
+// Module represents a Terraform module with test configuration and results
 type Module struct {
 	Name        string
 	Path        string
@@ -18,19 +18,19 @@ type Module struct {
 	ApplyFailed bool
 }
 
-// ModuleManager manages Terraform module discovery
+// ModuleManager discovers Terraform modules in a directory structure
 type ModuleManager struct {
 	BaseExamplesPath string
 }
 
-// NewModuleManager creates a new ModuleManager
+// NewModuleManager creates a ModuleManager with the specified examples directory
 func NewModuleManager(baseExamplesPath string) *ModuleManager {
 	return &ModuleManager{
 		BaseExamplesPath: baseExamplesPath,
 	}
 }
 
-// NewModule creates a new Module instance
+// NewModule creates a Module with the specified name and path
 func NewModule(name, path string) *Module {
 	return &Module{
 		Name: name,
@@ -44,7 +44,7 @@ func NewModule(name, path string) *Module {
 	}
 }
 
-// DiscoverModules finds all Terraform modules in the examples directory
+// DiscoverModules scans the examples directory and returns all discoverable modules
 func (mm *ModuleManager) DiscoverModules() ([]*Module, error) {
 	var modules []*Module
 
@@ -68,7 +68,7 @@ func (mm *ModuleManager) DiscoverModules() ([]*Module, error) {
 	return modules, nil
 }
 
-// Apply deploys a Terraform module
+// Apply initializes and applies the Terraform module
 func (m *Module) Apply(t *testing.T) error {
 	t.Helper()
 	t.Logf("Applying Terraform module: %s", m.Name)
@@ -83,7 +83,7 @@ func (m *Module) Apply(t *testing.T) error {
 	return err
 }
 
-// Destroy tears down a deployed Terraform module
+// Destroy tears down the Terraform module and cleans up generated files
 func (m *Module) Destroy(t *testing.T) error {
 	t.Helper()
 	t.Logf("Destroying Terraform module: %s", m.Name)
@@ -128,7 +128,7 @@ func (m *Module) cleanupFiles(t *testing.T) error {
 	return nil
 }
 
-// PrintModuleSummary prints a formatted summary of module test results
+// PrintModuleSummary outputs a formatted summary of module test results
 func PrintModuleSummary(t *testing.T, modules []*Module) {
 	t.Helper()
 
