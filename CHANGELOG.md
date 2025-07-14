@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/dkooll/validor/compare/v1.5.0...v1.6.0) (2025-07-14)
+
+
+### Features
+
+* improve godoc comments for better API documentation ([feb82da](https://github.com/dkooll/validor/commit/feb82da53dd08deaaf86aa00db1843a84b6f1fe4))
+
 ## [1.5.0](https://github.com/dkooll/validor/compare/v1.4.0...v1.5.0) (2025-06-09)
 
 
