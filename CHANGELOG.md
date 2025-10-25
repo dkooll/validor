@@ -5,9 +5,6 @@
 
 ### Features
 
-* add release workflow ([#21](https://github.com/dkooll/validor/issues/21)) ([cc40244](https://github.com/dkooll/validor/commit/cc40244f3579ce014422838f35359a5a0fcaa796))
-* add release workflow ([#23](https://github.com/dkooll/validor/issues/23)) ([bfcbd05](https://github.com/dkooll/validor/commit/bfcbd05e8ae544912beae1cef478c519b4ca73dd))
-* add release workflows ([#22](https://github.com/dkooll/validor/issues/22)) ([86b0813](https://github.com/dkooll/validor/commit/86b0813d62c76c115c41d5f68bbe3491666e0809))
 * complete refactor ([#20](https://github.com/dkooll/validor/issues/20)) ([bb04142](https://github.com/dkooll/validor/commit/bb04142e0e976cee2e16a8e143bcf39565a8db5a))
 
 ## [1.6.0](https://github.com/dkooll/validor/compare/v1.5.0...v1.6.0) (2025-07-14)
