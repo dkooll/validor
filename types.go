@@ -1,35 +1,76 @@
 package validor
 
 import (
+	"context"
+	"fmt"
+	"sync"
 	"testing"
 )
 
-// ModuleProcessor applies, destroys, and cleans up Terraform modules
 type ModuleProcessor interface {
-	Apply(t *testing.T) error
-	Destroy(t *testing.T) error
+	Apply(ctx context.Context, t *testing.T) error
+	Destroy(ctx context.Context, t *testing.T) error
 	CleanupFiles(t *testing.T) error
 }
 
-// ModuleDiscoverer finds modules within a directory structure
-type ModuleDiscoverer interface {
-	DiscoverModules() ([]*Module, error)
+type TestResults struct {
+	mu            sync.RWMutex
+	modules       []*Module
+	failedModules []*Module
 }
 
-// TestRunner executes tests for Terraform modules
-type TestRunner interface {
-	RunTests(t *testing.T, modules []*Module, parallel bool)
+func NewTestResults() *TestResults {
+	return &TestResults{
+		modules:       make([]*Module, 0),
+		failedModules: make([]*Module, 0),
+	}
 }
 
-// Logger provides formatted logging capabilities
-type Logger interface {
-	Logf(format string, args ...any)
+func (tr *TestResults) AddModule(module *Module) {
+	tr.mu.Lock()
+	defer tr.mu.Unlock()
+	tr.modules = append(tr.modules, module)
+	if len(module.Errors) > 0 {
+		tr.failedModules = append(tr.failedModules, module)
+	}
 }
 
-// SimpleLogger is a no-op implementation of the Logger interface
-type SimpleLogger struct{}
+func (tr *TestResults) GetResults() ([]*Module, []*Module) {
+	tr.mu.RLock()
+	defer tr.mu.RUnlock()
+	return tr.modules, tr.failedModules
+}
 
-// Logf is a no-op implementation that does nothing
-func (l *SimpleLogger) Logf(format string, args ...any) {
-	// No-op implementation
+type ModuleInfo struct {
+	Name      string
+	Provider  string
+	Namespace string
+}
+
+type FileRestore struct {
+	Path            string
+	OriginalContent string
+	ModuleName      string
+	Provider        string
+	Namespace       string
+}
+
+type TerraformRegistryResponse struct {
+	Versions []struct {
+		Version string `json:"version"`
+	} `json:"versions"`
+}
+
+type ModuleError struct {
+	ModuleName string
+	Operation  string
+	Err        error
+}
+
+func (e *ModuleError) Error() string {
+	return fmt.Sprintf("%s failed for module %s: %v", e.Operation, e.ModuleName, e.Err)
+}
+
+func (e *ModuleError) Unwrap() error {
+	return e.Err
 }

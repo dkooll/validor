@@ -6,12 +6,18 @@ import (
 	"github.com/dkooll/validor"
 )
 
-// TestApplyNoError tests a single Terraform module
 func TestApplyNoError(t *testing.T) {
 	validor.TestApplyNoError(t)
 }
 
-// TestApplyAllParallel tests all Terraform modules in parallel
 func TestApplyAllParallel(t *testing.T) {
 	validor.TestApplyAllParallel(t)
+}
+
+func TestApplyAllSequential(t *testing.T) {
+	validor.TestApplyAllSequential(t)
+}
+
+func TestApplyAllLocal(t *testing.T) {
+	validor.TestApplyAllLocal(t)
 }
