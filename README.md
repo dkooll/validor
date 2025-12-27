@@ -1,4 +1,4 @@
-# validor [![Go Reference](https://pkg.go.dev/badge/github.com/cloudnationhq/az-cn-go-validor.svg)](https://pkg.go.dev/github.com/cloudnationhq/az-cn-go-validor)
+# validor [![Go Reference](https://pkg.go.dev/badge/github.com/dkooll/validor.svg)](https://pkg.go.dev/github.com/dkooll/validor)
 
 Validor streamlines azure terraform module testing by automatically applying and destroying resources, ensuring efficient and reliable validation.
 
