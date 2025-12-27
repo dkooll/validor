@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/dkooll/validor/compare/v1.7.0...v1.8.0) (2025-12-27)
+
+
+### Features
+
+* add tests ([#26](https://github.com/dkooll/validor/issues/26)) ([950e3f5](https://github.com/dkooll/validor/commit/950e3f5a140fe4a6e92db99211d05b48f5da5d2d))
+
 ## [1.7.0](https://github.com/dkooll/validor/compare/v1.6.0...v1.7.0) (2025-10-25)
 
 
