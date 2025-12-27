@@ -23,6 +23,7 @@ type Config struct {
 	Local         bool
 	ExceptionList []string
 	Namespace     string
+	ExamplesPath  string
 }
 
 type Option func(*Config)
@@ -46,6 +47,10 @@ func WithLocal(local bool) Option {
 	return func(c *Config) { c.Local = local }
 }
 
+func WithExamplesPath(path string) Option {
+	return func(c *Config) { c.ExamplesPath = path }
+}
+
 func NewConfig(opts ...Option) *Config {
 	config := &Config{}
 	for _, opt := range opts {
@@ -61,6 +66,7 @@ func init() {
 	flag.StringVar(&globalConfig.Example, "example", "", "Specific example(s) to test (comma-separated)")
 	flag.BoolVar(&globalConfig.Local, "local", false, "Use local source for testing")
 	flag.StringVar(&globalConfig.Namespace, "namespace", "cloudnationhq", "Terraform registry namespace")
+	flag.StringVar(&globalConfig.ExamplesPath, "examples-path", "", "Path to examples directory (defaults to '../examples')")
 }
 
 func GetConfig() *Config {
@@ -77,12 +83,12 @@ func (c *Config) ParseExceptionList() {
 	}
 }
 
-func TestApplyNoError(t *testing.T) {
-	config := setupConfig()
+func TestApplyNoError(t *testing.T, opts ...Option) {
+	config := setupConfigWithOptions(opts...)
 	if config.Example == "" {
 		t.Fatal(redError("-example flag is not set"))
 	}
-	modules := createModulesFromNames(parseExampleList(config.Example), filepath.Join("..", "examples"))
+	modules := createModulesFromNames(parseExampleList(config.Example), getExamplesPath(config))
 	sourceType := map[bool]string{true: "local", false: "registry"}[config.Local]
 	var setup TestSetupFunc
 	if config.Local {
@@ -91,20 +97,20 @@ func TestApplyNoError(t *testing.T) {
 	runModuleTests(t, modules, true, config, setup, sourceType)
 }
 
-func TestApplyAllParallel(t *testing.T) {
-	config := setupConfig()
+func TestApplyAllParallel(t *testing.T, opts ...Option) {
+	config := setupConfigWithOptions(opts...)
 	modules := discoverModules(t, config)
 	RunTests(t, modules, true, config)
 }
 
-func TestApplyAllSequential(t *testing.T) {
-	config := setupConfig()
+func TestApplyAllSequential(t *testing.T, opts ...Option) {
+	config := setupConfigWithOptions(opts...)
 	modules := discoverModules(t, config)
 	RunTests(t, modules, false, config)
 }
 
-func TestApplyAllLocal(t *testing.T) {
-	config := setupConfig()
+func TestApplyAllLocal(t *testing.T, opts ...Option) {
+	config := setupConfigWithOptions(opts...)
 	modules := discoverModules(t, config)
 	runModuleTests(t, modules, true, config, createLocalSetupFunc(config), "local")
 }
@@ -114,10 +120,11 @@ type TestOption func(*TestConfig)
 type TestSetupFunc func(ctx context.Context, t *testing.T, modules []*Module) error
 
 type TestConfig struct {
-	Config      *Config
-	ModuleNames []string
-	UseLocal    bool
-	Parallel    bool
+	Config       *Config
+	ModuleNames  []string
+	UseLocal     bool
+	Parallel     bool
+	ExamplesPath string
 }
 
 func WithConfig(config *Config) TestOption {
@@ -136,9 +143,13 @@ func WithParallel(parallel bool) TestOption {
 	return func(tc *TestConfig) { tc.Parallel = parallel }
 }
 
+func WithTestExamplesPath(path string) TestOption {
+	return func(tc *TestConfig) { tc.ExamplesPath = path }
+}
+
 func RunTestsWithOptions(t *testing.T, opts ...TestOption) {
 	tc := &TestConfig{
-		Parallel: true,
+		Parallel: true, // default to parallel
 	}
 
 	for _, opt := range opts {
@@ -150,14 +161,19 @@ func RunTestsWithOptions(t *testing.T, opts ...TestOption) {
 		tc.Config.ParseExceptionList()
 	}
 
-	modules := createModulesFromNames(tc.ModuleNames, filepath.Join("..", "examples"))
+	if tc.ExamplesPath != "" {
+		tc.Config.ExamplesPath = tc.ExamplesPath
+	}
+
+	modules := createModulesFromNames(tc.ModuleNames, getExamplesPath(tc.Config))
 	sourceType := map[bool]string{true: "local", false: "registry"}[tc.UseLocal]
 	var setup TestSetupFunc
 	if tc.UseLocal {
 		setup = createLocalSetupFunc(tc.Config)
 	}
-	runModuleTests(t, modules, tc.Parallel, tc.Config, setup, sourceType)
+	runModuleTestsFn(t, modules, tc.Parallel, tc.Config, setup, sourceType)
 }
+
 
 func runModuleTests(t *testing.T, modules []*Module, parallel bool, config *Config, setup TestSetupFunc, sourceType string) {
 	ctx := context.Background()
@@ -166,6 +182,7 @@ func runModuleTests(t *testing.T, modules []*Module, parallel bool, config *Conf
 	if setup != nil {
 		if err := setup(ctx, t, modules); err != nil {
 			t.Fatal(redError(fmt.Sprintf("Setup failed: %v", err)))
+			return
 		}
 	}
 
@@ -202,14 +219,25 @@ func runModuleTests(t *testing.T, modules []*Module, parallel bool, config *Conf
 	})
 }
 
-func setupConfig() *Config {
+func setupConfigWithOptions(opts ...Option) *Config {
 	config := GetConfig()
+	for _, opt := range opts {
+		opt(config)
+	}
 	config.ParseExceptionList()
 	return config
 }
 
+func getExamplesPath(config *Config) string {
+	if config.ExamplesPath != "" {
+		return config.ExamplesPath
+	}
+	return filepath.Join("..", "examples")
+}
+
 func discoverModules(t *testing.T, config *Config) []*Module {
-	manager := NewModuleManager(filepath.Join("..", "examples"))
+	examplesPath := getExamplesPath(config)
+	manager := NewModuleManager(examplesPath)
 	manager.SetConfig(config)
 	modules, err := manager.DiscoverModules()
 	if err != nil {
@@ -236,7 +264,7 @@ func createModulesFromNames(moduleNames []string, basePath string) []*Module {
 	return modules
 }
 
-func convertModulesToLocal(ctx context.Context, t *testing.T, converter SourceConverter, moduleNames []string, exceptionList []string, moduleInfo ModuleInfo) []FileRestore {
+func convertModulesToLocal(ctx context.Context, t *testing.T, converter SourceConverter, moduleNames []string, exceptionList []string, moduleInfo ModuleInfo, examplesPath string) []FileRestore {
 	var allFilesToRestore []FileRestore
 
 	for _, moduleName := range moduleNames {
@@ -244,7 +272,7 @@ func convertModulesToLocal(ctx context.Context, t *testing.T, converter SourceCo
 			continue
 		}
 
-		modulePath := filepath.Join("..", "examples", moduleName)
+		modulePath := filepath.Join(examplesPath, moduleName)
 		filesToRestore, err := converter.ConvertToLocal(ctx, modulePath, moduleInfo)
 		if err != nil {
 			t.Logf("Warning: Failed to convert module %s to local source: %v", moduleName, err)
@@ -266,7 +294,7 @@ func createLocalSetupFunc(config *Config) TestSetupFunc {
 
 		converter := NewSourceConverter(NewRegistryClient())
 		moduleNames := extractModuleNames(modules)
-		allFilesToRestore := convertModulesToLocal(ctx, t, converter, moduleNames, config.ExceptionList, moduleInfo)
+		allFilesToRestore := convertModulesToLocal(ctx, t, converter, moduleNames, config.ExceptionList, moduleInfo, getExamplesPath(config))
 
 		t.Cleanup(func() {
 			if err := converter.RevertToRegistry(context.Background(), allFilesToRestore); err != nil {
@@ -319,9 +347,7 @@ func extractModuleInfoFromRepo() ModuleInfo {
 }
 
 func getRepoNameFromGit(dir string) string {
-	cmd := exec.Command("git", "remote", "get-url", "origin")
-	cmd.Dir = dir
-	output, err := cmd.Output()
+	output, err := gitRemoteURL(dir)
 	if err != nil {
 		return ""
 	}
@@ -334,3 +360,11 @@ func getRepoNameFromGit(dir string) string {
 	}
 	return ""
 }
+
+var gitRemoteURL = func(dir string) ([]byte, error) {
+	cmd := exec.Command("git", "remote", "get-url", "origin")
+	cmd.Dir = dir
+	return cmd.Output()
+}
+
+var runModuleTestsFn = runModuleTests

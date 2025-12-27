@@ -33,8 +33,10 @@ func (c *DefaultSourceConverter) ConvertToLocal(ctx context.Context, modulePath 
 	}
 
 	moduleSource := fmt.Sprintf("%s/%s/%s", moduleInfo.Namespace, moduleInfo.Name, moduleInfo.Provider)
-	submodulePattern := fmt.Sprintf(`^%s/([^/]+)/%s//modules/(.*)$`,
-		regexp.QuoteMeta(moduleInfo.Namespace), regexp.QuoteMeta(moduleInfo.Provider))
+	submodulePattern := fmt.Sprintf(`^%s/%s/%s//modules/(.*)$`,
+		regexp.QuoteMeta(moduleInfo.Namespace),
+		regexp.QuoteMeta(moduleInfo.Name),
+		regexp.QuoteMeta(moduleInfo.Provider))
 	submoduleRegex := regexp.MustCompile(submodulePattern)
 
 	for _, file := range files {
@@ -59,7 +61,7 @@ func (c *DefaultSourceConverter) ConvertToLocal(ctx context.Context, modulePath 
 			continue
 		}
 
-		if err := os.WriteFile(file, parsedFile.Bytes(), 0o644); err != nil {
+		if err := os.WriteFile(file, parsedFile.Bytes(), 0644); err != nil {
 			return filesToRestore, fmt.Errorf("failed to write file %s: %w", file, err)
 		}
 
@@ -85,7 +87,7 @@ func (c *DefaultSourceConverter) RevertToRegistry(ctx context.Context, filesToRe
 
 		latestVersion, err := c.registryClient.GetLatestVersion(ctx, restore.Namespace, restore.ModuleName, restore.Provider)
 		if err != nil {
-			if writeErr := os.WriteFile(restore.Path, []byte(restore.OriginalContent), 0o644); writeErr != nil {
+			if writeErr := os.WriteFile(restore.Path, []byte(restore.OriginalContent), 0644); writeErr != nil {
 				return fmt.Errorf("failed to restore file %s: %w", restore.Path, writeErr)
 			}
 			continue
@@ -93,7 +95,7 @@ func (c *DefaultSourceConverter) RevertToRegistry(ctx context.Context, filesToRe
 
 		updatedContent := c.updateVersionInContent(restore.OriginalContent, latestVersion)
 
-		if err := os.WriteFile(restore.Path, []byte(updatedContent), 0o644); err != nil {
+		if err := os.WriteFile(restore.Path, []byte(updatedContent), 0644); err != nil {
 			return fmt.Errorf("failed to write updated file %s: %w", restore.Path, err)
 		}
 	}
@@ -138,8 +140,8 @@ func (c *DefaultSourceConverter) updateModuleBlock(block *hclwrite.Block, module
 		block.Body().RemoveAttribute("version")
 		return true
 	case submoduleRegex != nil:
-		if matches := submoduleRegex.FindStringSubmatch(sourceValue); len(matches) == 3 {
-			localPath := fmt.Sprintf("../../modules/%s", strings.TrimPrefix(matches[2], "/"))
+		if matches := submoduleRegex.FindStringSubmatch(sourceValue); len(matches) == 2 {
+			localPath := fmt.Sprintf("../../modules/%s", strings.TrimPrefix(matches[1], "/"))
 			block.Body().SetAttributeValue("source", cty.StringVal(localPath))
 			block.Body().RemoveAttribute("version")
 			return true
