@@ -17,6 +17,17 @@ type Module struct {
 	Options     *terraform.Options
 	Errors      []string
 	ApplyFailed bool
+
+	applyHook   func(ctx context.Context, t *testing.T, m *Module) error
+	destroyHook func(ctx context.Context, t *testing.T, m *Module) error
+	cleanupHook func(ctx context.Context, t *testing.T, m *Module) error
+}
+
+type testLogger interface {
+	Helper()
+	Log(args ...any)
+	Logf(format string, args ...any)
+	Fatal(args ...any)
 }
 
 type ModuleManager struct {
@@ -74,6 +85,10 @@ func (mm *ModuleManager) DiscoverModules() ([]*Module, error) {
 func (m *Module) Apply(ctx context.Context, t *testing.T) error {
 	t.Helper()
 
+	if m.applyHook != nil {
+		return m.applyHook(ctx, t, m)
+	}
+
 	t.Logf("Applying Terraform module: %s", m.Name)
 	terraform.WithDefaultRetryableErrors(t, m.Options)
 
@@ -90,6 +105,24 @@ func (m *Module) Apply(ctx context.Context, t *testing.T) error {
 
 func (m *Module) Destroy(ctx context.Context, t *testing.T) error {
 	t.Helper()
+
+	if m.destroyHook != nil {
+		destroyErr := m.destroyHook(ctx, t, m)
+		if destroyErr != nil && !m.ApplyFailed {
+			wrappedErr := &ModuleError{ModuleName: m.Name, Operation: "terraform destroy", Err: destroyErr}
+			m.Errors = append(m.Errors, wrappedErr.Error())
+			t.Log(redError(wrappedErr.Error()))
+		}
+
+		if m.cleanupHook != nil && !m.ApplyFailed {
+			if err := m.cleanupHook(ctx, t, m); err != nil {
+				wrappedErr := &ModuleError{ModuleName: m.Name, Operation: "cleanup", Err: err}
+				m.Errors = append(m.Errors, wrappedErr.Error())
+				t.Log(redError(wrappedErr.Error()))
+			}
+		}
+		return destroyErr
+	}
 
 	t.Logf("Destroying Terraform module: %s", m.Name)
 
@@ -112,6 +145,11 @@ func (m *Module) Destroy(ctx context.Context, t *testing.T) error {
 
 func (m *Module) Cleanup(ctx context.Context, t *testing.T) error {
 	t.Helper()
+
+	if m.cleanupHook != nil {
+		return m.cleanupHook(ctx, t, m)
+	}
+
 	t.Logf("Cleaning up in: %s", m.Options.TerraformDir)
 	filesToCleanup := []string{"*.terraform*", "*tfstate*", "*.lock.hcl"}
 
@@ -135,8 +173,8 @@ func (m *Module) Cleanup(ctx context.Context, t *testing.T) error {
 	return nil
 }
 
-func PrintModuleSummary(t *testing.T, modules []*Module) {
-	t.Helper()
+func PrintModuleSummary(tb testLogger, modules []*Module) {
+	tb.Helper()
 
 	var failedModules []*Module
 	for _, module := range modules {
@@ -147,17 +185,17 @@ func PrintModuleSummary(t *testing.T, modules []*Module) {
 
 	if len(failedModules) > 0 {
 		for _, module := range failedModules {
-			t.Log(redError("Module " + module.Name + " failed with errors:"))
+			tb.Log(redError("Module " + module.Name + " failed with errors:"))
 			for i, errMsg := range module.Errors {
 				errText := fmt.Sprintf("  %d. %s", i+1, errMsg)
-				t.Log(redError(errText))
+				tb.Log(redError(errText))
 			}
-			t.Log("")
+			tb.Log("")
 		}
 
 		totalText := fmt.Sprintf("TOTAL: %d of %d modules failed", len(failedModules), len(modules))
-		t.Log(redError(totalText))
+		tb.Log(redError(totalText))
 	} else {
-		t.Logf("\n==== SUCCESS: All %d modules applied and destroyed successfully ====", len(modules))
+		tb.Logf("\n==== SUCCESS: All %d modules applied and destroyed successfully ====", len(modules))
 	}
 }
