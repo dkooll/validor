@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/dkooll/validor/compare/v1.8.0...v1.8.1) (2025-12-27)
+
+
+### Bug Fixes
+
+* remove test dir ([#28](https://github.com/dkooll/validor/issues/28)) ([df2e946](https://github.com/dkooll/validor/commit/df2e9469b74ade4feddc54503ffcba8e512eed20))
+
 ## [1.8.0](https://github.com/dkooll/validor/compare/v1.7.0...v1.8.0) (2025-12-27)
 
 
